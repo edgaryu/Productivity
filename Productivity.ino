@@ -2,7 +2,8 @@
 #include <Wire.h>
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_GFX.h"
-#include <Tone.h>
+//#include <Tone.h>
+//#include <OrangutanBuzzer.h>
 #include "Mappings.h"
 
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
@@ -10,9 +11,12 @@ Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 // Variables
 enum state {STUDY_ST, SHORT_REST_ST, LONG_REST_ST};
 state curr_state;
-uint8_t blocks_completed = 0;
+uint8_t blocks_completed = 0, progressNum = 0;
 
-Tone tone1;
+//Tone tone1;
+//OrangutanBuzzer buzzer;
+//unsigned char currentIdx = 0;
+//#define MELODY_LENGTH 95
 
 // Record runtime
 unsigned long startTime;
@@ -33,6 +37,7 @@ void setup() {
   matrix.setTextWrap(false);
   matrix.clear();
   matrix.writeDisplay();
+//  tone1.begin(10);
 
   // Start in STUDY state
   // Initialize timer to 25 mins
@@ -54,6 +59,16 @@ void loop() {
   // If time block has ended
   if (current_timer < 0)
     end_block();
+
+//  if (currentIdx < MELODY_LENGTH && !buzzer.isPlaying())
+//  {
+//    // play note at max volume
+//    buzzer.playNote(note[currentIdx], duration[currentIdx], 8);
+//    currentIdx++;
+//  }
+//  if (currentIdx == MELODY_LENGTH)
+//    currentIdx = 0;
+  
 }
 
 // Reset current timer according to the given state
@@ -106,7 +121,8 @@ void end_block() {
 void update() {
 
   // Find left digit
-  uint8_t leftdigit = 0, n = current_timer;
+  uint8_t leftdigit = 0;
+  int8_t n = current_timer;
   while (n/10 > 0) {
     leftdigit++;
     n -= 10;
@@ -120,12 +136,21 @@ void update() {
   const uint8_t *right_matrix = numbers[rightdigit];
   matrix.drawBitmap(-5, 0, left_matrix, 8, 8, LED_ON);
   matrix.drawBitmap(-1, 0, right_matrix, 8, 8, LED_ON);
-  for (int i = 0; i < blocks_completed && i < 8; i++)
+
+  // Display number of blocks completed
+  for (uint8_t i = 0; i < blocks_completed && i < 8; i++)
     matrix.drawPixel(i, 6, LED_ON);
+
+  // Display progress of current STUDY block
+  progressNum = 8 - (current_timer / 3);
+  for (uint8_t j = 0; j < progressNum; j++)
+    matrix.drawPixel(j, 7, LED_ON);  
 
   // Indicator that in STUDY state
   if (curr_state == STUDY_ST)
     matrix.drawPixel(7, 5, LED_ON);
   matrix.writeDisplay();
 }
+
+
 
